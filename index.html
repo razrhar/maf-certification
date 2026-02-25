@@ -381,7 +381,29 @@
     .nav-row { flex-direction: column-reverse; }
     .nav-row .btn { width: 100%; }
   }
+
+  /* ── Download Certificate PDF ── */
+  .btn-dl-pdf {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%;
+    padding: 15px 24px;
+    margin-bottom: 28px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700; letter-spacing: .04em;
+    background: #01ace6;
+    color: #fff;
+    box-shadow: 0 4px 24px rgba(1,172,230,.35);
+    transition: transform .15s, box-shadow .2s;
+  }
+  .btn-dl-pdf:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(1,172,230,.5); }
+  .btn-dl-pdf:active { transform: scale(.97); }
+  .btn-dl-pdf svg { flex-shrink: 0; }
+
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div class="bg"></div>
@@ -396,7 +418,7 @@
       <span class="logo-label">MuleSoft · Salesforce</span>
     </div>
     <h1>MuleSoft Agent Fabric<br><span style="font-size:0.62em;">Practitioner MAF Core SE</span></h1>
-    <p class="subtitle">Test your knowledge of MuleSoft Agent Fabric: concepts, positioning, governance & real-world use cases.</p>
+    <p class="subtitle">Test your knowledge of MuleSoft Agent Fabric : concepts, positioning, governance & real-world use cases.</p>
     <div class="badge-row">
       <span class="badge">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -460,6 +482,11 @@
   <!-- RESULT SCREEN -->
   <div id="result-screen">
     <div class="card">
+      <button class="btn-dl-pdf" id="download-btn" onclick="downloadPDF()" style="display:none;">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Download Certificate PDF
+      </button>
+
       <div class="result-hero">
         <div class="score-circle" id="score-circle">
           <svg viewBox="0 0 140 140">
@@ -486,8 +513,7 @@
         <h3>Question review</h3>
         <div id="review-list"></div>
       </div>
-
-      <button class="btn btn-primary restart-btn" onclick="restart()">
+      <button class="btn btn-primary restart-btn" onclick="restart()" style="margin-top:12px;">
         Retake the Quiz
       </button>
     </div>
@@ -507,7 +533,7 @@ const QUESTIONS = [
       "It stores agent credentials securely in Anypoint Exchange"
     ],
     answer: 1,
-    explanation: `A broker is an orchestrating agent that receives a request and delegates tasks to specialized sub-agents — it owns the routing logic across the agent network.`
+    explanation: `A broker is an orchestrating agent that receives a request and delegates tasks to specialized sub-agents, it owns the routing logic across the agent network.`
   },
   {
     section: "MAF Concepts",
@@ -519,7 +545,7 @@ const QUESTIONS = [
       "To make any backend system agent-ready by exposing its capabilities as tools"
     ],
     answer: 3,
-    explanation: `An MCP Server exposes backend systems (SAP, Workday, legacy apps...) as tools that agents can consume — it's the bridge between your systems and the agentic layer.`
+    explanation: `An MCP Server exposes backend systems (SAP, Workday, legacy apps...) as tools that agents can consume, it's the bridge between your systems and the agentic layer.`
   },
   {
     section: "MAF Concepts",
@@ -531,7 +557,7 @@ const QUESTIONS = [
       "Direct database access between two Salesforce orgs"
     ],
     answer: 0,
-    explanation: `A2A allows agents from different platforms (e.g. Agentforce and Copilot) to collaborate securely through a standardized protocol — enabling true multi-vendor agent ecosystems.`
+    explanation: `A2A allows agents from different platforms (e.g. Agentforce and Copilot) to collaborate securely through a standardized protocol, enabling true multi-vendor agent ecosystems.`
   },
   {
     section: "MAF Concepts",
@@ -543,7 +569,7 @@ const QUESTIONS = [
       "It provides real-time monitoring of agent interactions"
     ],
     answer: 0,
-    explanation: `Exchange acts as the Agent Registry: a catalog where reusable agents and tools can be discovered and shared across the organization — preventing duplication and enabling reuse.`
+    explanation: `Exchange acts as the Agent Registry: a catalog where reusable agents and tools can be discovered and shared across the organization, preventing duplication and enabling reuse.`
   },
   {
     section: "MAF Concepts",
@@ -555,7 +581,7 @@ const QUESTIONS = [
       "All agents must be built using MuleSoft Dev Agent and deployed to CloudHub"
     ],
     answer: 0,
-    explanation: `MAF is platform-agnostic: it manages agents built on Agentforce, Azure AI Foundry, Bedrock, or any other platform — this is the core differentiation.`
+    explanation: `MAF is platform-agnostic: it manages agents built on Agentforce, Azure AI Foundry, Bedrock, or any other platform, this is the core differentiation.`
   },
   {
     section: "MAF Concepts",
@@ -567,19 +593,19 @@ const QUESTIONS = [
       "REST over HTTPS with OAuth 2.0 only"
     ],
     answer: 2,
-    explanation: `MAF supports both MCP (for tool/system connectivity) and A2A (for inter-agent communication across platforms) — two complementary protocols for the agentic era.`
+    explanation: `MAF supports both MCP (for tool/system connectivity) and A2A (for inter-agent communication across platforms), two complementary protocols for the agentic era.`
   },
   {
     section: "MAF vs. Agentforce",
     text: `A company builds an Agentforce Service Agent that answers questions using Salesforce case history and knowledge articles. Does this require MAF?`,
     options: [
-      "Yes — MCP Servers are needed to access Salesforce knowledge articles",
-      "No — the data is entirely within the Salesforce ecosystem, Agentforce alone is sufficient",
-      "Yes, always — MAF is required for any Agentforce deployment",
-      "Yes — A2A is needed to connect the agent to the knowledge base"
+      "Yes : MCP Servers are needed to access Salesforce knowledge articles",
+      "No : the data is entirely within the Salesforce ecosystem, Agentforce alone is sufficient",
+      "Yes, always : MAF is required for any Agentforce deployment",
+      "Yes : A2A is needed to connect the agent to the knowledge base"
     ],
     answer: 1,
-    explanation: `When all data and actions stay within the Salesforce ecosystem, MAF is not required. The key question: does the agent act OUTSIDE of Salesforce? Here — no.`
+    explanation: `When all data and actions stay within the Salesforce ecosystem, MAF is not required. The key question: does the agent act OUTSIDE of Salesforce? Here : no.`
   },
   {
     section: "MAF vs. Agentforce",
@@ -591,7 +617,7 @@ const QUESTIONS = [
       "A marketing team wants to personalize campaigns using Data Cloud segments"
     ],
     answer: 0,
-    explanation: `Acting on an on-premise system outside the Salesforce ecosystem is a clear MAF trigger — an MCP Server is needed to expose SAP as an agent-ready tool.`
+    explanation: `Acting on an on-premise system outside the Salesforce ecosystem is a clear MAF trigger, an MCP Server is needed to expose SAP as an agent-ready tool.`
   },
   {
     section: "MAF vs. Agentforce",
@@ -603,7 +629,7 @@ const QUESTIONS = [
       "They don't support asynchronous processing"
     ],
     answer: 2,
-    explanation: `Apex and Flow work well within Salesforce but can't handle complex enterprise connectivity, cross-platform orchestration, or agentic governance at scale — that's the MuleSoft gap.`
+    explanation: `Apex and Flow work well within Salesforce but can't handle complex enterprise connectivity, cross-platform orchestration, or agentic governance at scale : that's the MuleSoft gap.`
   },
   {
     section: "MAF vs. Agentforce",
@@ -611,11 +637,11 @@ const QUESTIONS = [
     options: [
       "The customer should rebuild everything in Agentforce before considering MAF",
       "MAF can only work with agents built natively in MuleSoft",
-      "It's not an opportunity — the customer already has a working solution",
+      "It's not an opportunity, the customer already has a working solution",
       "MAF can govern, secure and orchestrate that existing agent alongside Agentforce agents, creating a unified ecosystem"
     ],
     answer: 3,
-    explanation: `This is a prime MAF opportunity: govern existing non-Salesforce agents and connect them into the broader ecosystem, MAF is platform-agnostic by design.`
+    explanation: `This is a prime MAF opportunity: govern existing non-Salesforce agents and connect them into the broader ecosystem. MAF is platform-agnostic by design.`
   },
   {
     section: "MAF vs. Agentforce",
@@ -627,7 +653,7 @@ const QUESTIONS = [
       "MuleSoft is always cheaper than custom development"
     ],
     answer: 1,
-    explanation: `"Don't DIY Your AI" — MuleSoft means fast delivery, easy to adapt, robust and scalable. DIY = slow, hard to maintain, requires specialist skills.`
+    explanation: `"Don't DIY Your AI" : MuleSoft means fast delivery, easy to adapt, robust and scalable. DIY = slow, hard to maintain, requires specialist skills.`
   },
   {
     section: "Business Value",
@@ -639,7 +665,7 @@ const QUESTIONS = [
       "The HR agent was not connected to the right LLM"
     ],
     answer: 2,
-    explanation: `The scenario shows how an agent can inadvertently transfer sensitive PII to another agent that has no business accessing it a critical governance risk in A2A architectures.`
+    explanation: `The scenario shows how an agent can inadvertently transfer sensitive PII to another agent that has no business accessing it, a critical governance risk in A2A architectures.`
   },
   {
     section: "Business Value",
@@ -651,26 +677,26 @@ const QUESTIONS = [
       "API Manager"
     ],
     answer: 3,
-    explanation: `API Manager applies security policies, rate limiting, data masking and audit controls to all MCP and A2A interactions.`
+    explanation: `Agent Governance (via Flex Gateway) applies security policies, rate limiting, data masking and audit controls to all MCP and A2A interactions, the compliance layer.`
   },
   {
     section: "Business Value",
     text: `A CIO says: "I need complete visibility of my agentic solution for audit purposes." Which MAF capability responds to this?`,
     options: [
-      "Agent Orchestration — to route tasks between agents",
-      "MCP Server — to expose backend systems as tools",
-      "Agent Visualizer — to gain visibility into agent-to-agent relationships and interactions at runtime",
-      "Agent Registry — to publish agents in Exchange"
+      "Agent Orchestration : to route tasks between agents",
+      "MCP Server : to expose backend systems as tools",
+      "Agent Visualizer : to gain visibility into agent-to-agent relationships and interactions at runtime",
+      "Agent Registry : to publish agents in Exchange"
     ],
     answer: 2,
-    explanation: `The Agent Visualizer provides a real-time graph of agent relationships and interactions; essential for audit, compliance, and understanding your agentic topology.`
+    explanation: `The Agent Visualizer provides a real-time graph of agent relationships and interactions, essential for audit, compliance, and understanding your agentic topology.`
   },
   {
     section: "Business Value",
     text: `What is one of the major risks of NOT adopting a holistic enterprise agentic approach?`,
     options: [
       "Agents will become too autonomous and replace all human workers immediately",
-      "Organizations will face 'shadow AI' — ungoverned agents creating security and compliance gaps",
+      "Organizations will face 'shadow AI', ungoverned agents creating security and compliance gaps",
       "Agentforce will stop working without a connected MCP Server",
       "Data Cloud will become obsolete without MuleSoft governance"
     ],
@@ -693,13 +719,13 @@ const QUESTIONS = [
     section: "Use Cases & Scenarios",
     text: `In the "Travel Agent" use case, what did MuleSoft enable that Agentforce alone could not?`,
     options: [
-      "MuleSoft actions connected the agent to weather data, TripAdvisor, and rental bookings — enabling proactive, contextual decisions",
+      "MuleSoft actions connected the agent to weather data, TripAdvisor, and rental bookings, enabling proactive, contextual decisions",
       "The agent used Data Cloud to retrieve all external data",
       "MuleSoft replaced Agentforce entirely in this scenario",
       "The agent answered questions faster thanks to a better LLM"
     ],
     answer: 0,
-    explanation: `MuleSoft exposed external systems (Weather API, TripAdvisor, Sixt rental) as actions — enabling the agent to anticipate the storm, suggest alternatives and rebook proactively.`
+    explanation: `MuleSoft exposed external systems (Weather API, TripAdvisor, Sixt rental) as actions, enabling the agent to anticipate the storm, suggest alternatives and rebook proactively.`
   },
   {
     section: "Use Cases & Scenarios",
@@ -711,7 +737,7 @@ const QUESTIONS = [
       "MuleSoft replaces Agentforce, Copilot and Joule in Barco's architecture"
     ],
     answer: 0,
-    explanation: `In Barco's architecture, MuleSoft is the orchestration and governance backbone,connecting all agent platforms (Agentforce, Copilot, Joule) and exposing tools via MCP.`
+    explanation: `In Barco's architecture, MuleSoft is the orchestration and governance backbone, connecting all agent platforms (Agentforce, Copilot, Joule) and exposing tools via MCP.`
   },
   {
     section: "Use Cases & Scenarios",
@@ -720,10 +746,10 @@ const QUESTIONS = [
       "Build a separate Agentforce agent for each backend and let them communicate via email",
       "Use Data Cloud to replicate all data from WMS, Loyalty and ERPs before the agent can act",
       "Create one MCP Server per backend system (WMS, Loyalty, ERP x2) and expose them as tools consumable by the orchestrating agent",
-      "Build everything in Apex — one Flow per system"
+      "Build everything in Apex, one Flow per system"
     ],
     answer: 2,
-    explanation: `One MCP Server per system, all exposed as tools,this is the hands-on lab scenario. The orchestrating agent (broker) calls each tool as needed through MAF.`
+    explanation: `One MCP Server per system, all exposed as tools, this is the hands-on lab scenario. The orchestrating agent (broker) calls each tool as needed through MAF.`
   },
   {
     section: "Use Cases & Scenarios",
@@ -731,7 +757,7 @@ const QUESTIONS = [
     options: [
       "MAF replaces Agentforce for complex use cases requiring external connectivity",
       "MAF and Agentforce are competing products targeting the same customer need",
-      "Agentforce builds world-class agents; MuleSoft ensures they are composable, adaptable, secure and connected to the full enterprise — better together",
+      "Agentforce builds world-class agents; MuleSoft ensures they are composable, adaptable, secure and connected to the full enterprise, better together",
       "MAF is only relevant for customers who do not use Agentforce"
     ],
     answer: 2,
@@ -899,6 +925,7 @@ function showResults() {
   const badge = document.getElementById('cert-badge');
   badge.className = `cert-badge ${badgeClass}`;
   badge.textContent = badgeText;
+  if (total >= 15) document.getElementById('download-btn').style.display = 'flex';
 
   // Submit to Google Sheets
   const sectionScores = {};
@@ -964,10 +991,207 @@ function restart() {
   current = 0;
   answers = new Array(20).fill(null);
   document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('download-btn').style.display = 'none';
   document.getElementById('email-screen').style.display = 'block';
   document.getElementById('fname').value = '';
   document.getElementById('femail').value = '';
 }
+
+
+// ───────────────────────────────────────────────────
+// PDF Certificate — Salesforce brand palette only
+// Colors: #01ace6 · #F3F3F3 · white
+// ───────────────────────────────────────────────────
+function downloadPDF() {
+  if (typeof window.jspdf === 'undefined') { alert('PDF library not loaded yet — please wait a moment and try again.'); return; }
+  const _total = answers.filter((a, i) => a === QUESTIONS[i].answer).length;
+  if (_total < 15) { alert('Certificate is only available for certified participants (score ≥ 15/20).'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const W = 210;
+
+  const BLUE  = [1, 172, 230];
+  const LIGHT = [243, 243, 243];
+  const WHITE = [255, 255, 255];
+  const DARK  = [15, 23, 42];
+  const MUTED = [107, 114, 128];
+  const BLUED = [179, 224, 245];
+
+  const total    = answers.filter((a, i) => a === QUESTIONS[i].answer).length;
+  const pct      = Math.round((total / 20) * 100);
+  const isPassed = total >= 15;
+  const sectionResults = [];
+  let qi = 0;
+  SECTIONS.forEach(sec => {
+    let correct = 0;
+    for (let k = qi; k < qi + sec.count; k++) {
+      if (answers[k] === QUESTIONS[k].answer) correct++;
+    }
+    qi += sec.count;
+    sectionResults.push({ name: sec.name, correct, total: sec.count });
+  });
+
+  // WHITE BACKGROUND
+  doc.setFillColor(...WHITE);
+  doc.rect(0, 0, W, 297, 'F');
+
+  // HEADER — blue band, centered text only, no logo
+  doc.setFillColor(...BLUE);
+  doc.rect(0, 0, W, 44, 'F');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(...WHITE);
+  const t1 = 'MuleSoft Agent Fabric';
+  doc.text(t1, W/2 - doc.getTextWidth(t1)/2, 20);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...BLUED);
+  const t2 = 'Practitioner MAF Core SE  —  Certification';
+  doc.text(t2, W/2 - doc.getTextWidth(t2)/2, 33);
+
+  // CANDIDATE STRIP
+  doc.setFillColor(...LIGHT);
+  doc.rect(0, 44, W, 16, 'F');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...MUTED);
+  doc.text('Candidate:', 14, 54);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...DARK);
+  doc.text(userName, 38, 54);
+  const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...MUTED);
+  const dateLabel = 'Issued:  ' + dateStr;
+  doc.text(dateLabel, W - 14 - doc.getTextWidth(dateLabel), 54);
+
+  // SCORE CIRCLE — score number + /20 inside, pct below, badge below that
+  const cx = W / 2, cy = 88, R = 22;
+
+  doc.setFillColor(...LIGHT);
+  doc.circle(cx, cy, R, 'F');
+  doc.setDrawColor(...BLUE);
+  doc.setLineWidth(3);
+  doc.circle(cx, cy, R, 'S');
+
+  // Score number centered in circle
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(...BLUE);
+  const sStr = String(total);
+  doc.text(sStr, cx - doc.getTextWidth(sStr)/2, cy + 2);
+
+  // /20 below score, still inside circle
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
+  const sub20 = '/ 20';
+  doc.text(sub20, cx - doc.getTextWidth(sub20)/2, cy + 9);
+
+  // Percentage — OUTSIDE circle, below it
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(26);
+  doc.setTextColor(...DARK);
+  const pStr = pct + '%';
+  doc.text(pStr, cx - doc.getTextWidth(pStr)/2, cy + R + 13);
+
+  // Badge pill — CERTIFIED or NOT CERTIFIED only
+  const badgeLabel = isPassed ? 'CERTIFIED' : 'NOT CERTIFIED';
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  const bw = doc.getTextWidth(badgeLabel) + 20;
+  const bx = cx - bw / 2;
+  const by = cy + R + 20;
+
+  if (isPassed) {
+    doc.setFillColor(...BLUE);
+    doc.roundedRect(bx, by, bw, 9.5, 1.5, 1.5, 'F');
+    doc.setTextColor(...WHITE);
+  } else {
+    doc.setFillColor(...WHITE);
+    doc.setDrawColor(...BLUE);
+    doc.setLineWidth(0.6);
+    doc.roundedRect(bx, by, bw, 9.5, 1.5, 1.5, 'FD');
+    doc.setTextColor(...BLUE);
+  }
+  doc.text(badgeLabel, cx - doc.getTextWidth(badgeLabel)/2, by + 6.6);
+
+  // SECTION BREAKDOWN
+  let sy = cy + R + 40;
+
+  doc.setFillColor(...BLUE);
+  doc.rect(14, sy - 4.5, 3, 7, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...BLUE);
+  doc.text('SCORE BY SECTION', 20, sy);
+  sy += 8;
+
+  sectionResults.forEach((sec, idx) => {
+    const secPct = sec.correct / sec.total;
+    if (idx % 2 === 0) { doc.setFillColor(...LIGHT); } else { doc.setFillColor(...WHITE); }
+    doc.rect(10, sy - 3.5, W - 20, 14, 'F');
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...DARK);
+    doc.text(sec.name, 14, sy + 2);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...BLUE);
+    const sl = sec.correct + '/' + sec.total;
+    doc.text(sl, W - 14 - doc.getTextWidth(sl), sy + 2);
+
+    const trackX = 14, trackW = W - 46, barY = sy + 4.5, barH = 3;
+    doc.setFillColor(...LIGHT);
+    doc.roundedRect(trackX, barY, trackW, barH, 1, 1, 'F');
+    if (secPct > 0) {
+      doc.setFillColor(...BLUE);
+      doc.roundedRect(trackX, barY, trackW * secPct, barH, 1, 1, 'F');
+    }
+    sy += 15;
+  });
+
+  // MESSAGE BOX
+  sy += 6;
+  doc.setDrawColor(...LIGHT);
+  doc.setLineWidth(0.6);
+  doc.line(14, sy - 4, W - 14, sy - 4);
+  sy += 2;
+
+  const msg = isPassed
+    ? 'Congratulations! You have demonstrated solid knowledge of MuleSoft Agent Fabric and are ready to position and discuss agentic architecture with customers.'
+    : 'We recommend reviewing the MAF training materials, especially sections scoring below 75% , before retaking the quiz.';
+
+  const msgLines = doc.splitTextToSize(msg, W - 40);
+  const msgBoxH  = msgLines.length * 5.5 + 12;
+
+  doc.setFillColor(...LIGHT);
+  doc.roundedRect(14, sy, W - 28, msgBoxH, 2, 2, 'F');
+  doc.setFillColor(...BLUE);
+  doc.roundedRect(14, sy, 3, msgBoxH, 1, 1, 'F');
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...MUTED);
+  doc.text(msgLines, 21, sy + 7);
+
+  // FOOTER — no logo, no link
+  doc.setFillColor(...LIGHT);
+  doc.rect(0, 277, W, 20, 'F');
+  doc.setFillColor(...BLUE);
+  doc.rect(0, 277, W, 1.2, 'F');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
+  const footNote = 'MuleSoft Agent Fabric · SE Enablement · France';
+  doc.text(footNote, W/2 - doc.getTextWidth(footNote)/2, 289);
+
+  doc.save('MAF-Certification-' + userName.replace(/\s+/g, '-') + '.pdf');
+}
+
 </script>
 </body>
 </html>
